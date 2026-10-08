@@ -1,0 +1,46 @@
+# --- Per-person machine / R session files (never project content) ---
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+.DS_Store
+Thumbs.db
+
+# --- Credentials ---
+.Renviron
+.env
+*.pem
+*.key
+credentials*
+secrets*
+
+# --- Stage 1: data-raw/ - payload ignored; README and manifest tracked ---
+data-raw/*
+!data-raw/README.md
+!data-raw/manifest*
+
+# --- Stage 2: data-clean/ (and data-clean-*/ if Step 6 splits it) ---
+data-clean/*
+!data-clean/README.md
+!data-clean/*_dictionary.csv
+!data-clean/*_value_labels.csv
+data-clean-*/*
+!data-clean-*/README.md
+!data-clean-*/*_dictionary.csv
+!data-clean-*/*_value_labels.csv
+
+# --- Stage 3: data-full/ ---
+data-full/*
+!data-full/README.md
+!data-full/*_dictionary.csv
+!data-full/*_value_labels.csv
+
+# --- Stage 4: data-public/ ---
+data-public/*
+!data-public/README.md
+!data-public/*_dictionary.csv
+!data-public/*_value_labels.csv
+
+# --- Generated deposit bundle ---
+output/*
+!output/README.md
