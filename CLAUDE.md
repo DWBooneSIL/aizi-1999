@@ -77,7 +77,7 @@ matches the report's 233. **No interviewer or date columns, and no names.**
 will be attempted**. When an interviewee was also a test-taker ("repeater"),
 their score is copied into the interview sheet's `NOTE TCF` column. That
 column is an attribute of the interview record, not a foreign key. `Q`
-appears in 18 rows (meaning unknown). Religion (`EGLISE`) was recorded only
+appears in 18 rows. **Decided:** treat `Q` as missing (NA). Religion (`EGLISE`) was recorded only
 for repeaters, in the TCF sheet, never for interviewees.
 
 **Derived field:** the ETS proficiency level is computed from the TCF raw
@@ -88,7 +88,8 @@ score using the report's bands: 0-12 → 0+, 13-15 → 1, 16-18 → 1+, 19-22 �
 **Data-quality issues for the crosswalks:**
 - **Language codes in the data:** `AHM` is already used for Mobumrin (not in
   the legend). Variants include `FR`, `FRFA`, `DIO`, `AIZ`, `ARABE` and
-  `BETE`. Numeric codes `3`/`4` appear in language fields (meaning unknown).
+  `BETE`. Numeric codes `3`/`4` appear in language fields (see "Incomplete
+  language lists" below).
   List separators are inconsistent (`,` `, ` `.`).
   - **Decided:** `FRFA` is an error for `FRA`, so it becomes `fra`.
   - **Decided:** `AIZ` means "an Aizi variety" as opposed to French,
@@ -98,18 +99,47 @@ score using the report's bands: 0-12 → 0+, 13-15 → 1, 16-18 → 1+, 19-22 �
     invent a code.
 - **Church language strings** are letter clusters, not lists. For example,
   `ADF&` = A+D+F+?. Lowercase marks translation (`Fa` = French translated
-  into Aizi), `(F)A` is unexplained, and `&` is undefined in the legend.
+  into Aizi). **Decided:** `(F)A` = F + A, with the parentheses dropped. `&`
+  (undefined in the legend) means "along with others"; see "Incomplete
+  language lists" below.
   Values like `oui`, `non`, `qqfois` and `peu` are mixed in.
 - **Uncertainty markers** need to be kept as flags: `?`, `1?`, `B?`, `M?`,
   `nou?`, `2?` and `100?`. Typos like `f` for `F`, `m` for `M`, and stray
   `2`/`5` in yes/no fields also need fixing.
-- **SEXE has `N`** in 3 TCF rows. EGLISE has `,M` in 1 row.
+- **SEXE has `N`** in 3 TCF rows. **Decided:** `N` = not recorded, so it
+  becomes missing (NA), not a third category. EGLISE has `,M` in 1 row.
 - **TCF EGLISE `N` = 89 of 292.** That is implausibly many for Papa Nouveau
   (3 of 25 congregations). **Decided:** in the TCF sheet `N` = *néant* (no
   religion). In the church sheet `N` stays Papa Nouveau, so the same letter
   needs a per-sheet crosswalk.
 - **Birthplace** is free text with variants (`NIGUI.SAFF`, `ABRANIA`,
   `TOUPA`/`TOUPAH`, `Attoutou B`) that need a place crosswalk.
+
+### Incomplete language lists (decided in principle; format to confirm)
+
+Some answers don't give a strict list of languages:
+- **`3` / `4` in an individual-interview language field** = the expected
+  languages plus others, totalling 3 or 4, with the languages themselves
+  not listed.
+- **`&` in a church language string** (e.g. `ADF&`) = the listed languages
+  plus others.
+
+Using many languages is treated as a relevant fact in its own right, not
+as missing data. Proposed format: the long `* x language` tables hold one row
+per *named* language. The parent row (respondent x domain, or congregation x
+service function) carries:
+
+- `language_list_status`:
+  - `complete` - every language used is listed
+  - `listed_plus_others` - church `&`
+  - `count_only` - `3`/`4` with no languages named; zero language rows
+- `n_languages_reported`: the stated count (3 or 4) for `count_only`;
+  otherwise the number of languages listed.
+
+Analysis rule: when probing preferential use of one or two languages, **set
+aside** answers with `count_only`. Whether to also set aside
+`listed_plus_others` is **deferred until data exploration** (researcher). Keep
+both statuses distinct so either choice remains a simple filter.
 
 ### Coding scheme (from the legend)
 
@@ -133,6 +163,8 @@ score using the report's bands: 0-12 → 0+, 13-15 → 1, 16-18 → 1+, 19-22 �
   | BCI; church `B` | Baoulé | `bci` |
   | WOB | Wè Northern (Wobé) | `wob` |
   | church `E` | Ebrié | `ebr` |
+  | DIO | Dioula (Jula), trade language - researcher's best guess | `dyu` |
+  | FRFA | error for FRA (researcher) | `fra` |
   | BETE | Bété - no single ISO code for the cluster (e.g. `bev` Daloa, `btg` Gagnoa) | unresolved; keep as a flagged value |
 
   Church interviews use one-letter codes, with `A` meaning "the local Aizi
@@ -246,13 +278,10 @@ language names.
 
 ## Open questions
 
-1. **Codes still to discuss** (`FRFA`, `AIZ` and TCF `EGLISE = N` are
-   settled above):
-   - `NOTE TCF = Q` (18 interview rows)
-   - numeric `3`/`4` in language fields
-   - `DIO`
-   - `&` and `(F)A` in church strings
-   - SEXE `N` (3 TCF rows)
+1. **Codes:** all settled. `(F)A` (one cell, E02 Q1e) counts as both F and
+   A; the parentheses' possible hesitation on F is not retained. Still
+   pending: whether to exclude `listed_plus_others` from one-or-two-language
+   preference analyses, which awaits data exploration.
 2. **Canonical fetch method:** htmlview scraping works anonymously but is
    brittle. `googlesheets4` is robust but needs each collaborator's Google
    login. Should the canonical copy stay this Google Sheet?
